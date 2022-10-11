@@ -6,6 +6,8 @@
 
 #include <c10/util/Exception.h>
 
+#include <iostream>
+
 #if GLOO_HAVE_TRANSPORT_TCP
 #include <gloo/transport/tcp/device.h>
 #endif
@@ -51,8 +53,10 @@ static std::shared_ptr<::gloo::transport::Device> makeTCPDevice(
 
   ::gloo::transport::tcp::attr attr;
   if (!interfaceName.empty()) {
+    std::cout << "######makeTCPDevice -> set iface to:" << interfaceName << "\n"<< std::flush;
     attr.iface = interfaceName;
   } else {
+    std::cout << "######makeTCPDevice -> set hostName to:" << hostname << "\n"<< std::flush;
     attr.hostname = hostname;
   }
   return ::gloo::transport::tcp::CreateDevice(attr);
@@ -125,6 +129,8 @@ std::shared_ptr<::gloo::transport::Device>
 makeGlooDevice(const std::string& interfaceName, const std::string& hostName)
 {
   static auto transportName = getenv("GLOO_DEVICE_TRANSPORT");
+  std::cout << "######makeGlooDevice:transportName -> " << transportName << "\n"
+            << std::flush;
   if (transportName) {
     return GlooDeviceRegistry()->Create(transportName, interfaceName, hostName);
   }

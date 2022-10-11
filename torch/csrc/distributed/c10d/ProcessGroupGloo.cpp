@@ -7,6 +7,7 @@
 #include <exception>
 #include <ratio>
 #include <tuple>
+#include <iostream>
 
 #ifdef _WIN32
 #include <gloo/common/win.h>
@@ -642,6 +643,16 @@ bool doesHostnameResolveToUsableAddress(const std::string& hostname) {
     }
     break;
   }
+  if (rp != nullptr) {
+    std::cout << "#######doesHostnameResolveToUsableAddress: return true\n"
+               << std::flush;
+    
+  } else {
+  std::cout << "#######doesHostnameResolveToUsableAddress: return false\n"
+               << std::flush;
+
+  }
+
   freeaddrinfo(result);
   return rp != nullptr;
 }
@@ -672,12 +683,16 @@ std::shared_ptr<::gloo::transport::Device> ProcessGroupGloo::
   socketInitialize();
   std::array<char, HOST_NAME_MAX> hostname{};
   auto rv = gethostname(hostname.data(), HOST_NAME_MAX);
+  std::cout << "######createDefaultDevice:gethostname() get result:" << hostname.data() << "\n" << std::flush;
   if (rv != 0) {
     throw std::system_error(errno, std::system_category());
   }
 
   // Use this machine's hostname if it resolves to an address.
   if (doesHostnameResolveToUsableAddress(hostname.data())) {
+    std::cout << "#####createDefaultDevice -> makeDeviceForHostname:"
+              << hostname.data() << "\n"
+              << std::flush;
     return ::c10d::GlooDeviceFactory::makeDeviceForHostname(hostname.data());
   }
 
@@ -686,6 +701,8 @@ std::shared_ptr<::gloo::transport::Device> ProcessGroupGloo::
       "Unable to resolve hostname to a (local) address. ",
       "Using the loopback address as fallback. ",
       "Manually set the network interface to bind to with GLOO_SOCKET_IFNAME.");
+  std::cout << "#####createDefaultDevice -> makeDeviceForHostname:127.0.0.1\n"
+            << std::flush;
   return createDeviceForHostname(kLoopbackAddress);
 }
 #endif
@@ -727,6 +744,7 @@ ProcessGroupGloo::ProcessGroupGloo(
       options_(options),
       stop_(false),
       collectiveCounter_(0) {
+  std::cout << "########after init.cpp" << std::flush;
   auto& devices = options->devices;
   if (devices.empty()) {
     TORCH_CHECK(false, "No device(s) specified");
@@ -746,10 +764,14 @@ ProcessGroupGloo::ProcessGroupGloo(
   //
   contexts_.reserve(options->devices.size());
   for(const auto i : c10::irange(options->devices.size())) {
+    std::cout << "#########before create context" << std::flush;
     auto context = std::make_shared<::gloo::rendezvous::Context>(rank_, size_);
+    std::cout << "#########after create context" << std::flush;
     auto store = ::gloo::rendezvous::PrefixStore(std::to_string(i), *store_);
     context->setTimeout(options->timeout);
+    std::cout << "#########before connect full mesh" << std::flush;
     context->connectFullMesh(store, options->devices[i]);
+    std::cout << "#########after connect full mesh" << std::flush;
     contexts_.push_back(std::move(context));
   }
 
