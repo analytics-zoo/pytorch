@@ -14,6 +14,8 @@
 #ifdef USE_C10D_GLOO
 #include <c10d/ProcessGroupGloo.hpp>
 #include <c10d/ProcessGroupWrapper.hpp>
+#include <string.h>
+#include <unistd.h>
 #endif
 
 #ifdef USE_C10D_NCCL
@@ -1365,6 +1367,14 @@ options :class:`~torch.distributed.ProcessGroupNCCL.Options`).
               // If no hostname is specified, this function looks up
               // the machine's hostname and returns a device instance
               // associated with the address that the hostname resolves to.
+              // Go get your hostname
+              char *host = std::getenv("GLOO_HOSTNAME");
+              size_t len = strlen(host);
+              sethostname(host, len);
+              TORCH_CHECK(
+                host != nullptr,
+                "Due to the reason that gramine cannot set up hostname correctly, please set GLOO_HOSTNAME"
+              );
               options->devices.push_back(
                   ::c10d::ProcessGroupGloo::createDefaultDevice());
             }
