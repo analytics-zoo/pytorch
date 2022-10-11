@@ -764,14 +764,14 @@ ProcessGroupGloo::ProcessGroupGloo(
   //
   contexts_.reserve(options->devices.size());
   for(const auto i : c10::irange(options->devices.size())) {
-    std::cout << "#########before create context" << std::flush;
+    std::cout << "#########before create context" << std::endl << std::flush;
     auto context = std::make_shared<::gloo::rendezvous::Context>(rank_, size_);
-    std::cout << "#########after create context" << std::flush;
+    std::cout << "#########after create context" << std::endl << std::flush;
     auto store = ::gloo::rendezvous::PrefixStore(std::to_string(i), *store_);
     context->setTimeout(options->timeout);
-    std::cout << "#########before connect full mesh" << std::flush;
+    std::cout << "#########before connect full mesh" <<std::endl << std::flush;
     context->connectFullMesh(store, options->devices[i]);
-    std::cout << "#########after connect full mesh" << std::flush;
+    std::cout << "#########after connect full mesh" << std::endl << std::flush;
     contexts_.push_back(std::move(context));
   }
 
